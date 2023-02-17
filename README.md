@@ -2,7 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/platforms-iOS%208.0%20%7C%20macOS%2010.10%20%7C%20tvOS%209.0%20%7C%20watchOS%203.0-F28D00.svg)
 
-JSON makes it easy to deal with JSON data in Swift.
+swift-json makes it easy to deal with JSON data in Swift.
 
 
 1. [Why](#why)
@@ -25,8 +25,6 @@ To be fast, light, and elegant, `swift-json` is based on `swift enum` and provid
 `swift-json` is not only a traditional json data structure. It's a generic data structure. So in many cases you can use `JSON` instead of `Any`
 
 Swift is very strict about types. But although explicit typing is good for saving us from mistakes, it becomes painful when dealing with JSON and other areas that are, by nature, implicit about types.
-
-Take the Twitter API for example. Say we want to retrieve a user's "name" value of some tweet in Swift (according to [Twitter's API](https://developer.twitter.com/en/docs/tweets/timelines/api-reference/get-statuses-home_timeline)).
 
 The code would look like this:
 
@@ -86,13 +84,6 @@ let package = Package(
 )
 ```
 Then run `swift build` whenever you get prepared.
-
-#### Manually (iOS 8+, OS X 10.9+)
-
-To use this library in your project manually you may:  
-
-1. for Projects, just drag SwiftyJSON.swift to the project tree
-2. for Workspaces, include the whole SwiftyJSON.xcodeproj
 
 ## Usage
 

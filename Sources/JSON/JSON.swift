@@ -6,7 +6,7 @@
 ///
 /// `JSON` is  not only a traditional json data structure, it's a generic data structure
 /// So in many cases you can use `JSON` instead of `Any`
-/// `JSON` implements standard protocols such as `Collection` `Subscript` `Codable` and so on
+/// `JSON` implements standard protocols such as `RandomAccessCollection` `Subscript` `Codable` and so on
 ///
 /// - Note: The `JSON` Object will filter  the key which value is null.  Set `null` or `nil` value to the `JSON` Object key  means delete it
 /// - Note: When `Int` subscript access for `JSON` will substitute  `warning` for `Index out of bounds error`

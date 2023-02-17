@@ -14,6 +14,7 @@ final class JsonTests: XCTestCase {
         
         let rawJson = JSON(json.rawValue) // init rawValue
         XCTAssertEqual(json, rawJson)
+        XCTAssertEqual(NSNumber.OCType.bool, NSNumber.OCType.int8)
     }
     func testCollection() throws {
         var json = JSON("hello world")
@@ -38,9 +39,9 @@ final class JsonTests: XCTestCase {
         json[0] = 100
         json[1] = 200
         json[2] = 300
-        json[99] = 999 // Don't worry, nothing will happen just a warning info
+        json[9] = 999 // Don't worry, nothing will happen just a warning info
         XCTAssertEqual(json[0].int, 100)
-        XCTAssertEqual(json[99], .null)
+        XCTAssertEqual(json[9], .null)
         // With subscript in Object
         json =  ["name": "Jack", "age": 25]
         json["name"] = "Mike"
