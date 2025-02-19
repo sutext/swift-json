@@ -135,10 +135,6 @@ public extension JSON{
 // MARK: - JSON: Subscript
 
 extension JSON{
-    public subscript(key:JSONKey)->JSON{
-        get{ getValue(key) }
-        set{ setValue(newValue, forKey: key) }
-    }
     public subscript(dynamicMember key:String) -> JSON {
         get { getValue(key)}
         set { setValue(newValue, forKey: key)}
@@ -149,20 +145,27 @@ extension JSON{
     }
     public subscript(path: [JSONKey]) -> JSON {
         get {
-            return path.reduce(self){$0[$1]}
+            switch path.count{
+            case 0:
+                return .null
+            case 1:
+                return self.getValue(path[0])
+            default:
+                return path.reduce(self){$0.getValue($1)}
+            }
         }
         set {
             switch path.count {
             case 0:
                 return
             case 1:
-                self[path[0]] = newValue
+                self.setValue(newValue, forKey: path[0])
             default:
                 var aPath = path
-                aPath.remove(at: 0)
-                var next = self[path[0]]
-                next[aPath] = newValue
-                self[path[0]] = next
+                let key0 = aPath.remove(at: 0)
+                var value0 = self.getValue(key0)
+                value0[aPath] = newValue
+                self.setValue(value0, forKey: key0)
             }
         }
     }
