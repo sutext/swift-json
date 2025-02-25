@@ -15,7 +15,7 @@ import Foundation
 /// - Note: When `Int` subscript access for `JSON` will substitute  `warning` for `Index out of bounds error`
 /// - Note: `JSON(Int8(1)) and JSON(Int8(0))` will be save as `JSON.bool(true) an JSON.bool(false)`
 ///
-@dynamicMemberLookup public enum JSON {
+@dynamicMemberLookup public enum JSON:Sendable {
     case null
     case bool(Bool)
     case array(Array)
@@ -73,6 +73,8 @@ public extension JSON{
         case let value as [Any]:
             self = .array(value.map(JSON.init))
         case let value as NSArray:
+            self = .array(value.map(JSON.init))
+        case let value as Set<AnyHashable>:
             self = .array(value.map(JSON.init))
         case let value as [String: Any]:
             let result = value.reduce(into:Object()) { map, ele in
@@ -139,11 +141,11 @@ extension JSON{
         get { getValue(key)}
         set { setValue(newValue, forKey: key)}
     }
-    public subscript(path: JSONKey...) -> JSON {
+    public subscript(path: (any JSONKey)...) -> JSON {
         get { self[path] }
         set { self[path] = newValue }
     }
-    public subscript(path: [JSONKey]) -> JSON {
+    public subscript(path: [any JSONKey]) -> JSON {
         get {
             switch path.count{
             case 0:
@@ -169,34 +171,38 @@ extension JSON{
             }
         }
     }
-    private func getValue(_ key:JSONKey)->JSON{
-        switch (self,key){
-        case let (.array(ary),idx as Int):
-            return ary.count>idx ? ary[idx] : .null
-        case let (.object(dic),str as String):
-            return dic[str] ?? .null
+    private func getValue(_ key:any JSONKey)->JSON{
+        switch self{
+        case .array(let ary):
+            guard let idx = key.intValue else{
+                return .null
+            }
+            guard ary.count > idx else{
+                return .null
+            }
+            return ary[idx]
+        case .object(let obj):
+            return obj[key.strValue] ?? .null
         default:
+            print("⚠️⚠️[JSON] Only `JSON.Array` and `JSON.Object` have subscript properties")
             return .null
         }
     }
-    private mutating func setValue(_ newValue:JSON,forKey key:JSONKey){
-        switch key{
-        case let idx as Int:
-            guard case .array( var ary) = self else{
-                print("⚠️⚠️[JSON] Self type must be `JSON.Array` when key:(\(idx)) is Int")
+    private mutating func setValue(_ newValue:JSON,forKey key:any JSONKey){
+        switch self {
+        case .array(var ary):
+            guard let idx = key.intValue else{
+                print("⚠️⚠️[JSON] JSONKey must be able convert to `Int` when Self type is `JSON.Array`")
                 return
             }
-            if ary.count > idx{
-                ary[idx] = newValue
-                self = .array(ary)
-            }else{
+            guard ary.count > idx else{
                 print("⚠️⚠️[JSON] Index(\(idx)) out of bounds(\(ary.count))")
-            }
-        case let str as String:
-            guard case .object( var obj) = self else{
-                print("⚠️⚠️[JSON] Self type must be `JSON.Object` when key:(\(str)) is String")
                 return
             }
+            ary[idx] = newValue
+            self = .array(ary)
+        case .object(var obj):
+            let str = key.strValue
             if case .null = newValue {
                 obj[str] = nil
             }else{
@@ -204,7 +210,7 @@ extension JSON{
             }
             self = .object(obj)
         default:
-            print("⚠️⚠️Declare new conformances to `JSONKey` protocol will not work!")
+            print("⚠️⚠️[JSON] Self type must be `JSON.Object` or `JSON.Array`")
         }
     }
 }

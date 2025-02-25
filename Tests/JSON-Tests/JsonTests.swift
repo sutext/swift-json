@@ -20,6 +20,8 @@ final class JsonTests: XCTestCase {
         var json = JSON("hello world")
         print(json[.none])
         print(json[0])
+        let set:Set<String> = ["a","b","c"]
+        print("set:",JSON(set))
         XCTAssertTrue(json.isEmpty) //Single value is an Empty Collection
         XCTAssertTrue(json.count==0,"Single Json Collection Error")
         json = JSON(["a","b",1,true,1.231231321])
@@ -38,9 +40,14 @@ final class JsonTests: XCTestCase {
         var json: JSON =  [1,2,3]
         json[0] = 100
         json[1] = 200
-        json[2] = 300
+        json.2 = 300 //dynamicMemberLookup
         json[9] = 999 // Don't worry, nothing will happen just a warning info
+        json.10 = 9999 //out of bounds
+        json.name = "Tome" // JSON.Array not support string subscirpt. nothing happend
         XCTAssertEqual(json[0].int, 100)
+        XCTAssertEqual(json.1.int, 200)//dynamicMemberLookup
+        XCTAssertEqual(json[2].int, 300)//dynamicMemberLookup
+        XCTAssertEqual(json.name, .null)
         XCTAssertEqual(json[9], .null)
         // With subscript in Object
         json =  ["name": "Jack", "age": 25]
@@ -53,6 +60,7 @@ final class JsonTests: XCTestCase {
         dic["list"][2] = "that"
         XCTAssertEqual(dic.list[2].string, "that")
         XCTAssertEqual(dic["list",2].string, "that")
+        XCTAssertEqual(dic.list.2.string, "that")
         // With other JSON objects
         let user: JSON = ["username" : "Steve", "password": "supersecurepassword"]
         let auth: JSON = [

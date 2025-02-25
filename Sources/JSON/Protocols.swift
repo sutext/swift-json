@@ -12,14 +12,23 @@ import Foundation
 /// Simple JSON Key
 /// Do not declare new conformances to this protocol;
 /// they will not work as expected.
-public protocol JSONKey:Codable{}
-extension Int:JSONKey{} // Array subuscript
-extension String:JSONKey{} // Dictionary subscript
+public protocol JSONKey:Codable,Hashable,Sendable{
+    var intValue:Int?{get}
+    var strValue:String{get}
+}
+extension Int:JSONKey{
+    public var intValue: Int?{ self }
+    public var strValue: String { "\(self)" }
+}
+extension String:JSONKey{
+    public var intValue: Int?{ Int(self) }
+    public var strValue: String { self }
+}
 
 /// Simple JSON Value
 /// Do not declare new conformances to this protocol
 /// they will not work as expected.
-public protocol JSONValue:Codable{}
+public protocol JSONValue:Codable,Hashable,Sendable{}
 extension Int:JSONValue{}
 extension Int8:JSONValue{}
 extension Int16:JSONValue{}
@@ -32,7 +41,7 @@ extension UInt32:JSONValue{}
 extension UInt64:JSONValue{}
 extension Bool:JSONValue{}
 extension Float:JSONValue{}
-extension Double:JSONValue{}
+extension Float64:JSONValue{}
 extension CGFloat:JSONValue{}
 extension String:JSONValue{}
 extension JSON:JSONValue{}
@@ -71,12 +80,12 @@ extension JSON:ExpressibleByStringInterpolation{
     }
 }
 extension JSON:ExpressibleByArrayLiteral{
-    public init(arrayLiteral elements: JSONValue...) {
+    public init(arrayLiteral elements: (any JSONValue)...) {
         self = .array(elements.map(JSON.init))
     }
 }
 extension JSON:ExpressibleByDictionaryLiteral{
-    public init(dictionaryLiteral elements: (String, JSONValue)...) {
+    public init(dictionaryLiteral elements: (String, (any JSONValue))...) {
         let obj = elements.reduce(into: Object()) {
             let value = JSON($1.1)
             if value != .null{
@@ -98,23 +107,25 @@ extension JSON:CustomStringConvertible,CustomDebugStringConvertible{
     }
     public var debugDescription: String{ description }
 }
-extension JSON:Equatable{
-    public static func ==(lhs: JSON, rhs: JSON) -> Bool {
-        switch (lhs,rhs) {
-        case (.null,.null):
-            return true
-        case let (.bool(lvalue),.bool(rvalue)):
-            return lvalue == rvalue
-        case let (.number(lvalue),.number(rvalue)):
-            return lvalue == rvalue
-        case let (.string(lvalue),.string(rvalue)):
-            return lvalue == rvalue
-        case (.array(let lhsary),.array(let rhsary)):
-            return lhsary == rhsary
-        case (.object(let lhsdic),.object(let rhsdic)):
-            return lhsdic == rhsdic
-        default:
-            return false
+
+extension JSON:Hashable{
+    public static func == (lhs: JSON, rhs: JSON) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case .null:
+            Optional<JSON>.none.hash(into: &hasher)
+        case .bool(let bool):
+            bool.hash(into: &hasher)
+        case .array(let array):
+            array.hash(into: &hasher)
+        case .object(let object):
+            object.hash(into: &hasher)
+        case .number(let number):
+            number.hash(into: &hasher)
+        case .string(let string):
+            string.hash(into: &hasher)
         }
     }
 }
@@ -162,7 +173,7 @@ extension JSON:RandomAccessCollection{
             fatalError("JSONType(\(self)) and IndexType(\(i)) do not match")
         }
     }
-    public subscript(position: Index) -> (JSONKey,JSON) {
+    public subscript(position: Index) -> (any JSONKey,JSON) {
         switch (self,position){
         case let (.array(ary),.array(idx)):
             return (idx,ary[idx])
