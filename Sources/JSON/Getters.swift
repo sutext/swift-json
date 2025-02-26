@@ -8,6 +8,8 @@
 import Foundation
 
 // MARK: - JSON: Fast Access Safely getters
+
+/// It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
 public extension JSON{
     @inlinable var int8:Int8?{ number?.int8Value }
     @inlinable var int8Value:Int8{  int8 ?? 0 }
@@ -99,6 +101,8 @@ public extension JSON{
         }
     }
     /// Safety  Bool access. Compatible with string and number types
+    /// We do not convert numbers to Booleans, Because that is understand without hesitation.
+    /// NSNumber.boolValue treats 0 as false and non-0 as true, that is not safely
     ///
     ///     var json = JSON(true)
     ///     print(json.bool) // true

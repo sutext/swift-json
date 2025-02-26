@@ -7,13 +7,13 @@
 import Foundation
 
 ///
-/// `JSON` is  not only a traditional json data structure, it's a generic data structure
-/// So in many cases you can use `JSON` instead of `Any`
+/// `JSON` is  not only a traditional json data structure, it's a generic data structure. So in many cases you can use `JSON` instead of `Any`
 /// `JSON` implements standard protocols such as `RandomAccessCollection` `Subscript` `Codable` and so on
 ///
 /// - Note: The `JSON` Object will filter  the key which value is null.  Set `null` or `nil` value to the `JSON` Object key  means delete it
-/// - Note: When `Int` subscript access for `JSON` will substitute  `warning` for `Index out of bounds error`
-/// - Note: `JSON(Int8(1)) and JSON(Int8(0))` will be save as `JSON.bool(true) an JSON.bool(false)`
+/// - Note: When `Int` subscript write for `JSON.Array` will substitute  `warning` for `Index out of bounds error`
+/// - Note: It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
+/// - Important: `JSON(Int8(1)) and JSON(Int8(0))` will be save as `JSON.bool(true) an JSON.bool(false)`,but `JSON(Int(8)).int8Value still right`
 ///
 @dynamicMemberLookup public enum JSON:Sendable {
     case null
@@ -29,13 +29,31 @@ import Foundation
 
 // MARK: - Initializations
 public extension JSON{
+    /// Parse string to `JSON`
+    /// - Parameters:
+    ///    - rawString: raw data to be parse
+    /// - Note: Use  getter`JSON.rawString` to recover raw string.
+    /// - Important: Use `JSON(rawSttring)`directly,will got a simple string value as `JSON.string(rawString)`.
+    ///
     static func parse(_ rawString:String)throws->JSON{
         return try JSON.parse(Data(rawString.utf8))
     }
+    /// Parse data to `JSON`
+    /// - Parameters:
+    ///    - rawData: raw data to be parse
+    /// - Note: use  getter`JSON.rawData` to recover raw data.
+    /// - Important: Use`JSON(rawData)` directly .will got a `null` value as `JSON.null`.
+    ///
     static func parse(_ rawData:Data)throws ->JSON{
         let obj = try JSONSerialization.jsonObject(with: rawData, options: [.allowFragments])
         return JSON(obj)
     }
+    /// Parse string to `JSON`
+    /// - Parameters:
+    ///    - rawString: raw data to be parse
+    /// - Note: use  getter`JSON.rawString` to recover raw string.
+    /// - Important: Use `JSON(rawSttring)`directly,will got a simple string value as `JSON.string(rawString)`.
+    ///
     init(parse rawString: String?){
         guard let string = rawString,let json = try? JSON.parse(string) else {
             self = .null
@@ -43,6 +61,12 @@ public extension JSON{
         }
         self = json
     }
+    /// Parse data to `JSON`
+    /// - Parameters:
+    ///    - rawData: raw data to be parse
+    /// - Note: use  getter`JSON.rawData` to recover raw data.
+    /// - Important: Use`JSON(rawData)` directly .will got a `null` value as `JSON.null`.
+    ///
     init(parse rawData: Data?){
         guard let data = rawData,let json = try? JSON.parse(data) else {
             self = .null
@@ -50,6 +74,16 @@ public extension JSON{
         }
         self = json
     }
+    /// Converts any value to `JSON`
+    /// - Parameters:
+    ///    - rawValue: any value that conformances to `JSONValue` otherwise got `null`
+    /// - Note: Use  getter`JSON.rawValue` to recover raw value.
+    ///
+    /// - Important: Use `JSON(rawData)` directly,  will got a `null` value as `JSON.null`.
+    /// So you must parse it as `JSON(parse:rawData)` or `JSON.parse(rawData)`.
+    /// - Important: Use  `JSON(rawSttring)`directly, will got a simple string value as `JSON.string(rawString)`.
+    /// So you must parse it as `JSON(parse:rawSttring)` or `JSON.parse(rawSttring)`.
+    ///
     init(_ rawValue:Any?=nil){
         guard let json = rawValue else {
             self = .null
@@ -153,7 +187,7 @@ extension JSON{
             case 1:
                 return self.getValue(path[0])
             default:
-                return path.reduce(self){$0.getValue($1)}
+                return path.reduce(self){ $0.getValue($1) }
             }
         }
         set {
@@ -174,7 +208,7 @@ extension JSON{
     private func getValue(_ key:any JSONKey)->JSON{
         switch self{
         case .array(let ary):
-            guard let idx = key.intValue else{
+            guard let idx = key.intKey else{
                 return .null
             }
             guard ary.count > idx else{
@@ -182,7 +216,11 @@ extension JSON{
             }
             return ary[idx]
         case .object(let obj):
-            return obj[key.strValue] ?? .null
+            guard let str = key.strKey else{
+                print("⚠️⚠️[JSON] Invalid JSONKey implements. Do not declare new conformances to JSONKey ")
+                return .null
+            }
+            return obj[str] ?? .null
         default:
             print("⚠️⚠️[JSON] Only `JSON.Array` and `JSON.Object` have subscript properties")
             return .null
@@ -191,7 +229,7 @@ extension JSON{
     private mutating func setValue(_ newValue:JSON,forKey key:any JSONKey){
         switch self {
         case .array(var ary):
-            guard let idx = key.intValue else{
+            guard let idx = key.intKey else{
                 print("⚠️⚠️[JSON] JSONKey must be able convert to `Int` when Self type is `JSON.Array`")
                 return
             }
@@ -202,7 +240,10 @@ extension JSON{
             ary[idx] = newValue
             self = .array(ary)
         case .object(var obj):
-            let str = key.strValue
+            guard let str = key.strKey else{
+                print("⚠️⚠️[JSON] Invalid JSONKey implements. Do not declare new conformances to JSONKey")
+                return
+            }
             if case .null = newValue {
                 obj[str] = nil
             }else{

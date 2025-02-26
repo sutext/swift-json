@@ -12,19 +12,31 @@ import Foundation
 /// Simple JSON Key
 /// Do not declare new conformances to this protocol;
 /// they will not work as expected.
-public protocol JSONKey:Codable,Hashable,Sendable{
-    var intValue:Int?{get}
-    var strValue:String{get}
+public protocol JSONKey:Codable,Hashable,Sendable{}
+extension Int:JSONKey{}
+extension String:JSONKey{}
+extension JSONKey{
+    var intKey: Int?{
+        switch self{
+        case let int as Int:
+            return int
+        case let str as String:
+            return Int(str)
+        default:
+            return nil
+        }
+    }
+    var strKey: String?{
+        switch self{
+        case let int as Int:
+            return String(int)
+        case let str as String:
+            return str
+        default:
+            return nil
+        }
+    }
 }
-extension Int:JSONKey{
-    public var intValue: Int?{ self }
-    public var strValue: String { "\(self)" }
-}
-extension String:JSONKey{
-    public var intValue: Int?{ Int(self) }
-    public var strValue: String { self }
-}
-
 /// Simple JSON Value
 /// Do not declare new conformances to this protocol
 /// they will not work as expected.
@@ -45,6 +57,7 @@ extension Float64:JSONValue{}
 extension CGFloat:JSONValue{}
 extension String:JSONValue{}
 extension JSON:JSONValue{}
+extension Set:JSONValue where Element:JSONValue{} //convert to JSON.Array
 extension Array:JSONValue where Element:JSONValue{}
 extension Optional:JSONValue where Wrapped:JSONValue{}
 extension Dictionary:JSONValue where Key==String,Value:JSONValue{}
@@ -85,7 +98,7 @@ extension JSON:ExpressibleByArrayLiteral{
     }
 }
 extension JSON:ExpressibleByDictionaryLiteral{
-    public init(dictionaryLiteral elements: (String, (any JSONValue))...) {
+    public init(dictionaryLiteral elements: (String, any JSONValue)...) {
         let obj = elements.reduce(into: Object()) {
             let value = JSON($1.1)
             if value != .null{
@@ -97,10 +110,9 @@ extension JSON:ExpressibleByDictionaryLiteral{
 }
 extension JSON:CustomStringConvertible,CustomDebugStringConvertible{
     public var description: String{
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted,.sortedKeys]
-        if let data = try? encoder.encode(self),
-           let str = String(data: data, encoding: .utf8) {
+        if let rawValue,
+           let data = try? JSONSerialization.data(withJSONObject: rawValue, options: [.sortedKeys,.prettyPrinted]),
+           let str = String(data: data, encoding: .utf8){
             return str
         }
         return "⚠️[ERROR] JSON encode error"
