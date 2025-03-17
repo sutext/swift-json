@@ -132,6 +132,7 @@ final class JsonTests: XCTestCase {
         json["empty"] = [:]
         json["null"] = .null
         json.test = "test"
+        print("Compact:",json.compactString ?? "")
         let rawValue = json.rawValue
         XCTAssertEqual(json, JSON(rawValue))
         let rowData = json.rawData!
@@ -150,18 +151,22 @@ final class JsonTests: XCTestCase {
         json["int"] = 3123123123//ExpressibleByIntegerLiteral
         json["ary"] = [true,Double.pi,Int64.min,Int64.max,UInt64.max,11,[false]]//ExpressibleByArrayLiteral
         json["dic"] = ["name":"jackson","age":18,"obj":["key":"value"],"int":9999999]//ExpressibleByDictionaryLiteral
+        json.null = .object(["null":.null])
         json.int_max.test = 10 // warning happend
         json.ary[10] = 1 // nothing happend
         XCTAssertEqual(json.dic.count, 4)
         XCTAssertEqual(json.ary[10], .null) // Got null rather than crash
         XCTAssertEqual(json.ary.count, 7)
-        json["ary"] = nil // same as json["ary"] = .null; Means delete ary key
+        print(json)
+        json["ary"] = nil // ExpressibleByNilLiteral
         XCTAssertEqual(json.ary, .null) // got null
         XCTAssertEqual(json.ary.count, 0)
         XCTAssertEqual(json.noexist, .null) // got null
         XCTAssertEqual(json.test.notexist, .null)
-        let ajson = try! JSON.parse(json.rawString!)//encode and decode
+        let ajson = try! JSONDecoder().decode(JSON.self, from: try! JSONEncoder().encode(json))
+        let bjson = try! JSON.parse(try! JSONEncoder().encode(json))//encode and decode
         XCTAssertEqual(ajson, json)
+        XCTAssertEqual(bjson, json)
     }
     func testMerge() throws{
         var base: JSON = [

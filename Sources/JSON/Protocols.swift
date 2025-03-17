@@ -100,47 +100,28 @@ extension JSON:ExpressibleByArrayLiteral{
 extension JSON:ExpressibleByDictionaryLiteral{
     public init(dictionaryLiteral elements: (String, any JSONValue)...) {
         let obj = elements.reduce(into: Object()) {
-            let value = JSON($1.1)
-            if value != .null{
-                $0[$1.0] = value
-            }
+            $0[$1.0] = JSON($1.1)
         }
         self = .object(obj)
     }
 }
 extension JSON:CustomStringConvertible,CustomDebugStringConvertible{
     public var description: String{
-        if let rawValue,
-           let data = try? JSONSerialization.data(withJSONObject: rawValue, options: [.sortedKeys,.prettyPrinted]),
-           let str = String(data: data, encoding: .utf8){
-            return str
+        guard let rawValue else{
+            return "null"
         }
-        return "⚠️[ERROR] JSON encode error"
+        guard let data = try? JSONSerialization.data(withJSONObject: rawValue, options: [.sortedKeys,.prettyPrinted,.fragmentsAllowed]) else{
+            return "⚠️[ERROR] Invalid JSON Object"
+        }
+        guard let str = String(data: data, encoding: .utf8) else{
+            return "⚠️[ERROR] Invalid UTF-8 JSON Data"
+        }
+        return str
     }
     public var debugDescription: String{ description }
 }
 
-extension JSON:Hashable{
-    public static func == (lhs: JSON, rhs: JSON) -> Bool {
-        lhs.hashValue == rhs.hashValue
-    }
-    public func hash(into hasher: inout Hasher) {
-        switch self {
-        case .null:
-            Optional<JSON>.none.hash(into: &hasher)
-        case .bool(let bool):
-            bool.hash(into: &hasher)
-        case .array(let array):
-            array.hash(into: &hasher)
-        case .object(let object):
-            object.hash(into: &hasher)
-        case .number(let number):
-            number.hash(into: &hasher)
-        case .string(let string):
-            string.hash(into: &hasher)
-        }
-    }
-}
+
 extension JSON:RandomAccessCollection{
     public enum Index:Comparable{
         case none
@@ -210,3 +191,25 @@ extension JSON:RandomAccessCollection{
         }
     }
 }
+extension JSON:Hashable{
+    public static func == (lhs: JSON, rhs: JSON) -> Bool {
+        lhs.hashValue == rhs.hashValue
+    }
+    public func hash(into hasher: inout Hasher) {
+        switch self {
+        case .null:
+            Optional<JSON>.none.hash(into: &hasher)
+        case .bool(let bool):
+            bool.hash(into: &hasher)
+        case .array(let array):
+            array.hash(into: &hasher)
+        case .object(let object):
+            object.hash(into: &hasher)
+        case .number(let number):
+            number.hash(into: &hasher)
+        case .string(let string):
+            string.hash(into: &hasher)
+        }
+    }
+}
+

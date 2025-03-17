@@ -39,7 +39,7 @@ extension JSON: Codable {
             return
         }
         if let value = try? container.decode(Object.self) {
-            self = .object(value.filter{ $0.value != .null })
+            self = .object(value)
             return
         }
         self = .null
@@ -65,7 +65,7 @@ extension JSON: Codable {
         case .array(let ary):
             try container.encode(ary)
         case .object(let dic):
-            try container.encode(dic.filter{ $0.value != .null })
+            try container.encode(dic)
         }
     }
 }

@@ -131,13 +131,6 @@ public extension JSON{
 
 // MARK: - JSON: RawValue
 extension JSON{
-    /// Convert to json string use UTF8 encoding.
-    @inlinable public var rawString: String?{
-        if let rawData, let str = String(data: rawData, encoding: .utf8){
-            return str
-        }
-        return nil
-    }
     /// Recover the original data structure
     ///
     ///     let json = JSON(["key":"value"])
@@ -145,6 +138,7 @@ extension JSON{
     ///         print(dic)
     ///         thirdPartMethodd(dic:dic);
     ///     }
+    /// - Note:`nil` is only obtained if `self` is `JSON.null`
     ///
     @inlinable public var rawValue:Any?{
         switch self {
@@ -157,17 +151,66 @@ extension JSON{
         case .string(let value):
             return value
         case .object(let value):
-            return value.compactMapValues { $0.rawValue }
+            return value.mapValues { $0.rawValue }
         case .array(let value):
-            return value.map({ $0.rawValue })
+            return value.map{ $0.rawValue }
+        }
+    }
+    /// The same as `rawValue`,but compact. Strip all null values.
+    /// - SeeAlso: `rawValue`
+    @inlinable public var compactValue:Any?{
+        switch self {
+        case .bool(let value):
+            return value
+        case .number(let value):
+            return value
+        case .null:
+            return nil
+        case .string(let value):
+            return value
+        case .object(let value):
+            return value.compactMapValues { $0.compactValue }
+        case .array(let value):
+            return value.compactMap{ $0.compactValue }
         }
     }
     /// Convert to json data
     /// JSONSerialization is more efficient
+    /// - Note:`nil` is only obtained if `self` is `JSON.null`
     @inlinable public var rawData:Data?{
-        if let rawValue{
-            return try?  JSONSerialization.data(withJSONObject: rawValue, options: .sortedKeys)
+        guard let value = rawValue else{
+            return nil
         }
-        return nil
+        return try? JSONSerialization.data(withJSONObject: value, options: [.sortedKeys,.fragmentsAllowed])
+    }
+    /// The same as `rawData` but compact.Strip all null values.
+    /// - SeeAlso: `rawData`
+    @inlinable public var compactData:Data?{
+        guard let value = compactValue else{
+            return nil
+        }
+        return try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed])
+    }
+    /// Convert to json string use UTF8 encoding.
+    /// - Note:`nil` is only obtained if `self` is `JSON.null`
+    @inlinable public var rawString: String?{
+        guard let data = rawData else{
+            return nil
+        }
+        guard let string = String(data: data, encoding: .utf8) else{
+            return nil
+        }
+        return string
+    }
+    /// The same as `compactString` but compact
+    /// - SeeAlso: `compactString`
+    @inlinable public var compactString: String?{
+        guard let data = compactData else{
+            return nil
+        }
+        guard let string = String(data: data, encoding: .utf8) else{
+            return nil
+        }
+        return string
     }
 }

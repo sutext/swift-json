@@ -10,7 +10,6 @@ import Foundation
 /// `JSON` is  not only a traditional json data structure, it's a generic data structure. So in many cases you can use `JSON` instead of `Any`
 /// `JSON` implements standard protocols such as `RandomAccessCollection` `Subscript` `Codable` and so on
 ///
-/// - Note: The `JSON` Object will filter  the key which value is null.  Set `null` or `nil` value to the `JSON` Object key  means delete it
 /// - Note: When `Int` subscript write for `JSON.Array` will substitute  `warning` for `Index out of bounds error`
 /// - Note: It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
 /// - Important: `JSON(Int8(1)) and JSON(Int8(0))` will be save as `JSON.bool(true) an JSON.bool(false)`,but `JSON(Int(8)).int8Value still right`
@@ -112,16 +111,13 @@ public extension JSON{
             self = .array(value.map(JSON.init))
         case let value as [String: Any]:
             let result = value.reduce(into:Object()) { map, ele in
-                let value = JSON(ele.value)
-                if value != .null{
-                    map[ele.key] = value
-                }
+                map[ele.key] = JSON(ele.value)
             }
             self = .object(result)
         case let value as NSDictionary:
             let result = value.reduce(into:Object()) { map, ele in
                 let value = JSON(ele.value)
-                if let key = ele.key as? String,value != .null{
+                if let key = ele.key as? String{
                     map[key] = value
                 }
             }
@@ -244,11 +240,7 @@ extension JSON{
                 print("⚠️⚠️[JSON] Invalid JSONKey implements. Do not declare new conformances to JSONKey")
                 return
             }
-            if case .null = newValue {
-                obj[str] = nil
-            }else{
-                obj[str] = newValue
-            }
+            obj[str] = newValue
             self = .object(obj)
         default:
             print("⚠️⚠️[JSON] Self type must be `JSON.Object` or `JSON.Array`")
