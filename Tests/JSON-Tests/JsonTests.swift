@@ -68,6 +68,21 @@ final class JsonTests: XCTestCase {
           "apikey": "supersecretapitoken"
         ]
         XCTAssertEqual(auth.user, user)
+        
+        var obj = JSON(["key":"value"])
+        XCTAssertEqual(obj.key.string, "value")
+        obj.key = .null // set JSON.null for key
+        XCTAssertNil(obj.key.string)
+        XCTAssertEqual(obj.count, 1)
+        
+        obj.key = "other"
+        XCTAssertEqual(obj.key.string, "other")
+        obj.key = nil // set JSON.null for key
+        XCTAssertNil(obj.key.string)
+        XCTAssertEqual(obj.count, 1)
+        obj.removeValue(forKey:"key") // will remove the key
+        XCTAssertEqual(obj.count, 0)
+        XCTAssertNil(obj.key.string)
     }
     func testGetters() throws {
         var json = JSON(parse:"{\"float\":1.844674407370955e+30}")

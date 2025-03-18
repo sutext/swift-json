@@ -167,6 +167,23 @@ public extension JSON{
 // MARK: - JSON: Subscript
 
 extension JSON{
+    /// Like `removeValue(forKey:)`in `Dictionary`
+    /// Unlike `Dictionary` set nil value with subscirpt will not remove the key.
+    ///
+    ///     var json = JSON(["key":"value"])
+    ///     json.key = .null // set JSON.null for key
+    ///     json.key = nil // set JSON.null for key
+    ///     print(json.count) // 1
+    ///     json.removeValue(forKey:"key") // will remove the key
+    ///     print(json.count) // 0
+    ///
+    public mutating func removeValue(forKey:String){
+        guard case .object(var obj) = self else{
+            return
+        }
+        obj.removeValue(forKey: forKey)
+        self = .object(obj)
+    }
     public subscript(dynamicMember key:String) -> JSON {
         get { getValue(key)}
         set { setValue(newValue, forKey: key)}
