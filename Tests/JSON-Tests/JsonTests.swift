@@ -2,7 +2,6 @@ import XCTest
 @testable import JSON
 
 final class JsonTests: XCTestCase {
-    
     func testUsage() throws{
         let jsonString = "{\"b0\":0,\"b1\":true,\"b2\":125,\"b3\":\"true\",\"b4\":1}"
         let json = JSON(parse: jsonString)
@@ -15,6 +14,8 @@ final class JsonTests: XCTestCase {
         let rawJson = JSON(json.rawValue) // init rawValue
         XCTAssertEqual(json, rawJson)
         XCTAssertEqual(NSNumber.OCType.bool, NSNumber.OCType.int8)
+        var js = JSON.string("111")
+        js.key = 1
     }
     func testCollection() throws {
         var json = JSON("hello world")
@@ -80,7 +81,7 @@ final class JsonTests: XCTestCase {
         obj.key = nil // set JSON.null for key
         XCTAssertNil(obj.key.string)
         XCTAssertEqual(obj.count, 1)
-        obj.removeValue(forKey:"key") // will remove the key
+        obj.delete(key:"key") // will remove the key
         XCTAssertEqual(obj.count, 0)
         XCTAssertNil(obj.key.string)
     }
@@ -142,16 +143,13 @@ final class JsonTests: XCTestCase {
         json["int_min"] = JSON(Int64.min)
         json["int_max"] = JSON(Int64.max)
         json["uint_max"] = JSON(UInt64.max)
-        json["ary"] = [true,Double.pi,Int64.min,Int64.max,UInt64.max,int,[bool],[int]]
+        json["ary"] = [true,Double.pi,Int64.min,Int64.max,UInt64.max,int,[bool],[int,2]]
         json["dic"] = ["name":"jackson","age":18,"obj":json,"int":int]
         json["empty"] = [:]
         json["null"] = .null
         json.test = "test"
-        print("Compact:",json.compactString ?? "")
-        let rawValue = json.rawValue
-        XCTAssertEqual(json, JSON(rawValue))
-        let rowData = json.rawData!
-        XCTAssertEqual(json, JSON(parse: rowData))
+        XCTAssertEqual(json, JSON(json.rawValue))
+        XCTAssertEqual(json, JSON(parse: json.rawData!))
     }
     func testCodable() throws {
         var json:JSON = [:] //ExpressibleByDictionaryLiteral
@@ -172,7 +170,6 @@ final class JsonTests: XCTestCase {
         XCTAssertEqual(json.dic.count, 4)
         XCTAssertEqual(json.ary[10], .null) // Got null rather than crash
         XCTAssertEqual(json.ary.count, 7)
-        print(json)
         json["ary"] = nil // ExpressibleByNilLiteral
         XCTAssertEqual(json.ary, .null) // got null
         XCTAssertEqual(json.ary.count, 0)

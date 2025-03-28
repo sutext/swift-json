@@ -202,7 +202,7 @@ extension JSON{
         }
         return string
     }
-    /// The same as `compactString` but compact
+    /// The same as `rawString` but compact.Strip all null values.
     /// - SeeAlso: `compactString`
     @inlinable public var compactString: String?{
         guard let data = compactData else{

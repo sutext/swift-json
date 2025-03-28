@@ -7,61 +7,6 @@
 
 import Foundation
 
-// MARK: - Definition declaration
-
-/// Simple JSON Key
-/// Do not declare new conformances to this protocol;
-/// they will not work as expected.
-public protocol JSONKey:Codable,Hashable,Sendable{}
-extension Int:JSONKey{}
-extension String:JSONKey{}
-extension JSONKey{
-    var intKey: Int?{
-        switch self{
-        case let int as Int:
-            return int
-        case let str as String:
-            return Int(str)
-        default:
-            return nil
-        }
-    }
-    var strKey: String?{
-        switch self{
-        case let int as Int:
-            return String(int)
-        case let str as String:
-            return str
-        default:
-            return nil
-        }
-    }
-}
-/// Simple JSON Value
-/// Do not declare new conformances to this protocol
-/// they will not work as expected.
-public protocol JSONValue:Codable,Hashable,Sendable{}
-extension Int:JSONValue{}
-extension Int8:JSONValue{}
-extension Int16:JSONValue{}
-extension Int32:JSONValue{}
-extension Int64:JSONValue{}
-extension UInt:JSONValue{}
-extension UInt8:JSONValue{}
-extension UInt16:JSONValue{}
-extension UInt32:JSONValue{}
-extension UInt64:JSONValue{}
-extension Bool:JSONValue{}
-extension Float:JSONValue{}
-extension Float64:JSONValue{}
-extension CGFloat:JSONValue{}
-extension String:JSONValue{}
-extension JSON:JSONValue{}
-extension Set:JSONValue where Element:JSONValue{} //convert to JSON.Array
-extension Array:JSONValue where Element:JSONValue{}
-extension Optional:JSONValue where Wrapped:JSONValue{}
-extension Dictionary:JSONValue where Key==String,Value:JSONValue{}
-
 // MARK: Standard protocol implementation
 
 extension JSON:ExpressibleByNilLiteral{
@@ -93,12 +38,12 @@ extension JSON:ExpressibleByStringInterpolation{
     }
 }
 extension JSON:ExpressibleByArrayLiteral{
-    public init(arrayLiteral elements: (any JSONValue)...) {
-        self = .array(elements.map(JSON.init))
+    public init(arrayLiteral elements: Any?...) {
+        self = .array(elements.map{JSON($0)})
     }
 }
 extension JSON:ExpressibleByDictionaryLiteral{
-    public init(dictionaryLiteral elements: (String, any JSONValue)...) {
+    public init(dictionaryLiteral elements: (String,Any?)...) {
         let obj = elements.reduce(into: Object()) {
             $0[$1.0] = JSON($1.1)
         }
@@ -106,21 +51,66 @@ extension JSON:ExpressibleByDictionaryLiteral{
     }
 }
 extension JSON:CustomStringConvertible,CustomDebugStringConvertible{
+    /// Brief introduction.
+    /// Only print the root element
+    public var intros:String{
+        switch self {
+        case .null:
+            return "JSON.null"
+        case .bool(let bool):
+            return "JSON.bool(\(bool))"
+        case .array(let array):
+            return "JSON.Array(\(array.count))"
+        case .object(let object):
+            return "JSON.Object(\(object.count))"
+        case .number(let number):
+            return "JSON.number(\(number))"
+        case .string(let string):
+            return "JSON.string(\"\(string)\")"
+        }
+    }
     public var description: String{
         guard let rawValue else{
             return "null"
         }
         guard let data = try? JSONSerialization.data(withJSONObject: rawValue, options: [.sortedKeys,.prettyPrinted,.fragmentsAllowed]) else{
-            return "⚠️[ERROR] Invalid JSON Object"
+            return "⚠️⚠️[JSON ERROR] Invalid JSON Object"
         }
         guard let str = String(data: data, encoding: .utf8) else{
-            return "⚠️[ERROR] Invalid UTF-8 JSON Data"
+            return "⚠️⚠️[JSON ERROR] Invalid UTF-8 Data"
         }
         return str
     }
     public var debugDescription: String{ description }
 }
 
+/// `JSONKey` Is the protoco of`JSON` subscript key.  Only `Int` and `String`can conform this protocol
+/// - Important: Do not declare new conformances to this protocol, they will not work as expected.
+public protocol JSONKey:Codable,Hashable,Sendable{}
+extension Int:JSONKey{}
+extension String:JSONKey{}
+extension JSONKey{
+    var intKey: Int?{
+        switch self{
+        case let int as Int:
+            return int
+        case let str as String:
+            return Int(str)
+        default:
+            return nil
+        }
+    }
+    var strKey: String?{
+        switch self{
+        case let int as Int:
+            return String(int)
+        case let str as String:
+            return str
+        default:
+            return nil
+        }
+    }
+}
 
 extension JSON:RandomAccessCollection{
     public enum Index:Comparable{
@@ -163,7 +153,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_),(.bool,_),(.number,_),(.string,_):
             return .none
         default:
-            fatalError("JSONType(\(self)) and IndexType(\(i)) do not match")
+            fatalError("\(self.intros) and Index(\(i)) do not match")
         }
     }
     public subscript(position: Index) -> (any JSONKey,JSON) {
@@ -175,7 +165,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_),(.bool,_),(.number,_),(.string,_):
             return (0,.null)
         default:
-            fatalError("JSONType(\(self)) and IndexType(\(position)) do not match")
+            fatalError("\(self.intros) and Index(\(position)) do not match")
         }
     }
     public func distance(from start: Index, to end: Index) -> Int {
@@ -187,7 +177,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_,_),(.bool,_,_),(.number,_,_),(.string,_,_):
             return 0
         default:
-            fatalError("JSONType(\(self)) and StartIndex(\(start)) and EndIndex(\(start)) do not match")
+            fatalError("\(self.intros) and StartIndex(\(start)) and EndIndex(\(start)) do not match")
         }
     }
 }
