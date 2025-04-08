@@ -90,6 +90,7 @@ public extension JSON{
     ///
     init(_ rawValue:Any?=nil){
         switch rawValue {
+        // simple
         case let value as Number:
             if value.isBool {
                 self = .bool(value.boolValue)
@@ -98,13 +99,20 @@ public extension JSON{
             }
         case let value as String:
             self = .string(value)
-        case let value as [Any]:
-            self = .array(value.map{ JSON($0) })
+        // map
+        case let value as Object:
+            self = .object(value)
         case let value as [String: Any]:
             let result = value.reduce(into:Object()) { map, ele in
                 map[ele.key] = JSON(ele.value)
             }
             self = .object(result)
+        // ary
+        case let value as Array:
+            self = .array(value)
+        case let value as [Any]:
+            self = .array(value.map{ JSON($0) })
+        // self
         case let value as JSON:
             self = value
         default:

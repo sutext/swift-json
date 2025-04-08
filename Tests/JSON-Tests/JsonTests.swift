@@ -159,7 +159,7 @@ final class JsonTests: XCTestCase {
         json["int_max"] = JSON(Int64.max)
         json["uint_max"] = JSON(UInt64.max)
         json["float"] = 1.844674407370955e+30
-        json.str = "ExpressibleByStringInterpolation" // ExpressibleByStringInterpolation,dynamicMemberLookup
+        json.str = "ExpressibleByStringInterpolation\(1)" // ExpressibleByStringInterpolation,dynamicMemberLookup
         json["bool"] = true //ExpressibleByBooleanLiteral
         json["int"] = 3123123123//ExpressibleByIntegerLiteral
         json["ary"] = [true,Double.pi,Int64.min,Int64.max,UInt64.max,11,[false]]//ExpressibleByArrayLiteral
