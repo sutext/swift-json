@@ -330,3 +330,33 @@ extension JSON{
         }
     }
 }
+extension JSON.Number{
+    /// is bool or not
+    var isBool:Bool{
+        octype == .bool && (int8Value == 0 || int8Value == 1)
+    }
+    // get objc type for current number
+    var octype:OCType{ OCType(self) }
+    /// enum some objc type of number
+    struct OCType:RawRepresentable,Codable,Equatable,Hashable,CustomStringConvertible{
+        var rawValue: CChar
+        init(rawValue: CChar) {
+            self.rawValue = rawValue
+        }
+        init(_ number:JSON.Number) {
+            self.init(rawValue: number.objCType.pointee)
+        }
+        static let bool     = OCType(.init(value:true))       // Bool 99 c
+        static let int8     = OCType(.init(value:Int8.max))   // Int8 99 c
+        static let int16    = OCType(.init(value:Int16.max))  // Int16 UInt8 115 s
+        static let int32    = OCType(.init(value:Int32.max))  // Int32 UInt16 105 i
+        static let int64    = OCType(.init(value:Int64.max))  // Int64 UInt32 113 q
+        static let uint64   = OCType(.init(value:UInt64.max)) // UInt64 81 Q
+        static let float    = OCType(.init(value:Float(0.0))) // Float 100 f
+        static let double   = OCType(.init(value:Double(0.0)))// Double 102 d
+        var description: String{
+            let chars:[CChar] = [rawValue,0]
+            return String(cString: chars.withUnsafeBufferPointer{ $0.baseAddress! })
+        }
+    }
+}

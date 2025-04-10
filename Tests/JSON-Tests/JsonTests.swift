@@ -6,16 +6,29 @@ final class JsonTests: XCTestCase {
         let jsonString = "{\"b0\":0,\"b1\":true,\"b2\":125,\"b3\":\"true\",\"b4\":1}"
         let json = JSON(parse: jsonString)
         XCTAssertEqual(json.rawString, jsonString) // parse rawString
-        
         let decodeJson = try? JSON.parse(json.rawData!) // parse rawData
         XCTAssertEqual(json, decodeJson)
         XCTAssertEqual(decodeJson?.rawString, jsonString)
-        
         let rawJson = JSON(json.rawValue) // init rawValue
         XCTAssertEqual(json, rawJson)
         XCTAssertEqual(NSNumber.OCType.bool, NSNumber.OCType.int8)
-        var js = JSON.string("111")
-        js.key = 1
+        print(NSNumber.OCType.int64)
+        print(NSNumber.OCType.uint64)
+        print("Int8:",NSNumber(value: Int8.max).octype)
+        print("UInt8:",NSNumber(value: UInt8(Int8.max)+1).octype)
+        print("Int16:",NSNumber(value: Int16.max).octype)
+        print("UInt16:",NSNumber(value: UInt16(Int16.max)+1).octype)
+        print("Int32:",NSNumber(value: Int32.max).octype)
+        print("UInt32:",NSNumber(value: UInt32(Int32.max)+1).octype)
+        print("Int64:",NSNumber(value: Int64.max).octype)
+        print("UInt64:",NSNumber(value: UInt64(Int64.max)+1).octype)
+        print("Int:",NSNumber(value: Int.max).octype)
+        print("UInt:",NSNumber(value: UInt(Int.max)+1).octype)
+        print(JSON(Int64.max).intValue)
+        print(JSON(Int64.min).intValue)
+        print(JSON(UInt64(Int64.max)+1).intValue) // overflow
+        print(JSON(UInt64(Int64.max)+2).intValue) // overflow
+        print(JSON(UInt64(Int64.max)+3).intValue) // overflow
     }
     func testCollection() throws {
         var json = JSON("hello world")
@@ -162,23 +175,27 @@ final class JsonTests: XCTestCase {
         json.str = "ExpressibleByStringInterpolation\(1)" // ExpressibleByStringInterpolation,dynamicMemberLookup
         json["bool"] = true //ExpressibleByBooleanLiteral
         json["int"] = 3123123123//ExpressibleByIntegerLiteral
-        json["ary"] = [true,Double.pi,Int64.min,Int64.max,UInt64.max,11,[false]]//ExpressibleByArrayLiteral
+        json["ary"] = [true,1.1,Double.pi,Int64.min,Int64.max,UInt64.max,11,[false]]//ExpressibleByArrayLiteral
         json["dic"] = ["name":"jackson","age":18,"obj":["key":"value"],"int":9999999]//ExpressibleByDictionaryLiteral
         json.null = .object(["null":.null])
         json.int_max.test = 10 // warning happend
         json.ary[10] = 1 // nothing happend
         XCTAssertEqual(json.dic.count, 4)
         XCTAssertEqual(json.ary[10], .null) // Got null rather than crash
-        XCTAssertEqual(json.ary.count, 7)
+        XCTAssertEqual(json.ary.count, 8)
         json["ary"] = nil // ExpressibleByNilLiteral
         XCTAssertEqual(json.ary, .null) // got null
         XCTAssertEqual(json.ary.count, 0)
         XCTAssertEqual(json.noexist, .null) // got null
         XCTAssertEqual(json.test.notexist, .null)
-        let ajson = try! JSONDecoder().decode(JSON.self, from: try! JSONEncoder().encode(json))
+        let ajson = try! JSONDecoder().decode(JSON.self, from: try! JSONEncoder().encode(json))//encode and decode
         let bjson = try! JSON.parse(try! JSONEncoder().encode(json))//encode and decode
+        let cjson = try! JSONDecoder().decode(JSON.self, from: json.rawData!)//encode and decode
+        let djson = try! JSON.parse(json.rawData!)//encode and decode
         XCTAssertEqual(ajson, json)
         XCTAssertEqual(bjson, json)
+        XCTAssertEqual(cjson, json)
+        XCTAssertEqual(djson, json)
     }
     func testMerge() throws{
         var base: JSON = [
