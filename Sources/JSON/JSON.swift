@@ -5,8 +5,6 @@
 //
 
 import Foundation
-
-
 ///
 /// `JSON` is designed to be a generic value type. In many cases you can use `JSON` instead of `Any`
 /// `JSON` is not only used to express json data structures, you can use it to express arbitrary complex structures of simple values.
@@ -14,7 +12,6 @@ import Foundation
 ///
 /// - Note: When `Int` subscript write for `JSON.Array` will substitute  `warning` for `Index out of bounds error`
 /// - Note: It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
-/// - Important: `JSON(Int8(1)) and JSON(Int8(0))` will be save as `JSON.bool(true) an JSON.bool(false)`,but `JSON(Int(8)).int8Value still right`
 ///
 @dynamicMemberLookup public enum JSON:Sendable {
     case null
@@ -123,14 +120,7 @@ public extension JSON{
         self = .bool(bool)
     }
     init(_ number:Int8) {
-        switch number{
-        case 0:
-            self = .bool(false)
-        case 1:
-            self = .bool(true)
-        default:
-            self = .number(.init(value: number))
-        }
+        self = .number(.init(value: number))
     }
     init(_ number:Int16) {
         self = .number(.init(value: number))
@@ -252,6 +242,10 @@ extension JSON{
         get { getValue(key)}
         set { setValue(newValue, forKey: key)}
     }
+    public subscript(key: any JSONKey) -> JSON {
+        get { getValue(key) }
+        set { setValue(newValue, forKey: key) }
+    }
     public subscript(path: (any JSONKey)...) -> JSON {
         get { self[path] }
         set { self[path] = newValue }
@@ -286,22 +280,22 @@ extension JSON{
         switch self{
         case .array(let ary):
             guard let idx = key.intKey else{
-                print("⚠️⚠️[JSON Subscript(get)] JSONKey must be able convert to Int in JSON.Array")
+                Swift.print("⚠️⚠️[JSON Subscript(get)] JSONKey must be able convert to Int in JSON.Array")
                 return .null
             }
             guard ary.count > idx else{
-                print("⚠️⚠️[JSON Subscript(get)] JSON.Array index(\(idx)) out of bounds(\(ary.count))")
+                Swift.print("⚠️⚠️[JSON Subscript(get)] JSON.Array index(\(idx)) out of bounds(\(ary.count))")
                 return .null
             }
             return ary[idx]
         case .object(let obj):
             guard let str = key.strKey else{
-                print("⚠️⚠️[JSON Subscript(get)] JSONKey must be able convert to String in JSON.Object")
+                Swift.print("⚠️⚠️[JSON Subscript(get)] JSONKey must be able convert to String in JSON.Object")
                 return .null
             }
             return obj[str] ?? .null
         default:
-            print("⚠️⚠️[JSON Subscript(get)] Access is not supported in \(self.intros)")
+            Swift.print("⚠️⚠️[JSON Subscript(get)] Access is not supported in \(self.intro)")
             return .null
         }
     }
@@ -309,36 +303,37 @@ extension JSON{
         switch self {
         case .array(var ary):
             guard let idx = key.intKey else{
-                print("⚠️⚠️[JSON Subscript(set)] JSONKey must be able convert to Int in JSON.Array")
+                Swift.print("⚠️⚠️[JSON Subscript(set)] JSONKey must be able convert to Int in JSON.Array")
                 return
             }
             guard ary.count > idx else{
-                print("⚠️⚠️[JSON Subscript(set)] JSON.Array index(\(idx)) out of bounds(\(ary.count))")
+                Swift.print("⚠️⚠️[JSON Subscript(set)] JSON.Array index(\(idx)) out of bounds(\(ary.count))")
                 return
             }
             ary[idx] = newValue
             self = .array(ary)
         case .object(var obj):
             guard let str = key.strKey else{
-                print("⚠️⚠️[JSON Subscript(set)] JSONKey must be able convert to String in JSON.Object")
+                Swift.print("⚠️⚠️[JSON Subscript(set)] JSONKey must be able convert to String in JSON.Object")
                 return
             }
             obj[str] = newValue
             self = .object(obj)
         default:
-            print("⚠️⚠️[JSON Subscript(set)] Access is not supported in \(self.intros)")
+            Swift.print("⚠️⚠️[JSON Subscript(set)] Access is not supported in \(self.intro)")
         }
     }
 }
+
 extension JSON.Number{
     /// is bool or not
     var isBool:Bool{
-        octype == .bool && (int8Value == 0 || int8Value == 1)
+        CFGetTypeID(self) == CFBooleanGetTypeID()
     }
     // get objc type for current number
     var octype:OCType{ OCType(self) }
     /// enum some objc type of number
-    struct OCType:RawRepresentable,Codable,Equatable,Hashable,CustomStringConvertible{
+    struct OCType:RawRepresentable,Codable,Hashable{
         var rawValue: CChar
         init(rawValue: CChar) {
             self.rawValue = rawValue
@@ -346,7 +341,6 @@ extension JSON.Number{
         init(_ number:JSON.Number) {
             self.init(rawValue: number.objCType.pointee)
         }
-        static let bool     = OCType(.init(value:true))       // Bool 99 c
         static let int8     = OCType(.init(value:Int8.max))   // Int8 99 c
         static let int16    = OCType(.init(value:Int16.max))  // Int16 UInt8 115 s
         static let int32    = OCType(.init(value:Int32.max))  // Int32 UInt16 105 i
@@ -354,9 +348,5 @@ extension JSON.Number{
         static let uint64   = OCType(.init(value:UInt64.max)) // UInt64 81 Q
         static let float    = OCType(.init(value:Float(0.0))) // Float 100 f
         static let double   = OCType(.init(value:Double(0.0)))// Double 102 d
-        var description: String{
-            let chars:[CChar] = [rawValue,0]
-            return String(cString: chars.withUnsafeBufferPointer{ $0.baseAddress! })
-        }
     }
 }

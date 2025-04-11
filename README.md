@@ -135,11 +135,12 @@ import JSON
 ```swift
     func testGetters() throws {
         var json = JSON(parse:"{\"float\":1.844674407370955e+30}")
-        json["int"] = 1 // save as JSON.number(1)
-        json["int8"] = JSON(Int8(1)) // save as JSON.bool(true)
+        json["zero"] = 0
+        json["int"] = 1
         json["false"] = JSON(false)
         json["strFalse"] = "false"
         json["strTrue"] = "true"
+        json["int8"] = JSON(Int8.max) //
         json["int16"] = JSON(Int16.max)
         json["int32"] = JSON(Int32.max)
         json["int_min"] = JSON(Int64.min)
@@ -150,27 +151,27 @@ import JSON
         json["empty"] = [:]
         json["null"] = .null
         json.test = "test"
-        
-        XCTAssertEqual(json["int"].int8, 1) // Int(1) != true
-        XCTAssertEqual(json["int"].bool, nil)
-        XCTAssertEqual(json.int, nil)  // It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
-        XCTAssertEqual(json["int8"].int8, 1) // Int8(1) == true
+        XCTAssertEqual(json["zero"].int, 0)
+        XCTAssertEqual(json["zero"].bool, false)
+        XCTAssertEqual(json["int"].int8, 1)
+        XCTAssertEqual(json["int"].bool, true)
+        XCTAssertEqual(json.int, nil)  // It can only access with subscript, when dynamicMemberLookup has a confrontation with getters
+        XCTAssertEqual(json["int8"].int8, 127)
         XCTAssertEqual(json["int8"].bool, true)
-        XCTAssertEqual(json["int8"].string, "true") // true -> "true"
         XCTAssertEqual(json["false"].int8, 0)
         XCTAssertEqual(json.false.int8, 0)
         XCTAssertEqual(json["false"].bool, false)
-        XCTAssertEqual(json["false"].string, "false")// false -> "false"
+        XCTAssertEqual(json["false"].string, "false")
         
-        XCTAssertEqual(json["strFalse"].bool, false) // "false" -> false
+        XCTAssertEqual(json["strFalse"].bool, false)
         XCTAssertEqual(json["strFalse"].number, nil)
-        XCTAssertEqual(json["strTrue"].bool, true)// "true" -> true
+        XCTAssertEqual(json["strTrue"].bool, true)
         XCTAssertEqual(json["strTrue"].number, nil)
         XCTAssertEqual(json["test"].bool, nil)
         XCTAssertEqual(json["test"].number, nil)
         
         XCTAssertEqual(json["int16"].int16, Int16.max)
-        XCTAssertNil(json["int16"].bool)
+        XCTAssertEqual(json["int16"].bool,true)
         XCTAssertEqual(json["int32"].int32, Int32.max)
         XCTAssertEqual(json["null"].int16, nil)
         XCTAssertEqual(json["uint_max"].uint64, UInt64.max)
