@@ -13,7 +13,8 @@ import Foundation
 /// - Note: When `Int` subscript write for `JSON.Array` will substitute  `warning` for `Index out of bounds error`
 /// - Note: It can only be reduced to subscipt, When dynamicMemberLookup has a confrontation with getters
 ///
-@dynamicMemberLookup public enum JSON:Sendable {
+@dynamicMemberLookup
+@frozen public enum JSON:Sendable {
     case null
     case bool(Bool)
     case array(Array)
@@ -216,10 +217,6 @@ public extension JSON{
         result.merge(from: other)
         return result
     }
-}
-// MARK: - JSON: Subscript
-
-extension JSON{
     ///
     /// - It does the same thing as `removeValue(forKey:)`in `Dictionary`
     /// - The difference is that  set nil value with subscirpt will not remove the key in `JSON`.
@@ -231,13 +228,17 @@ extension JSON{
     ///     json.delete(key:"key") // will remove the key
     ///     print(json.count) // 0
     ///
-    public mutating func delete(key:String){
+    mutating func delete(key:String){
         guard case .object(var obj) = self else{
             return
         }
         obj.removeValue(forKey: key)
         self = .object(obj)
     }
+}
+// MARK: - JSON: Subscript
+
+extension JSON{
     public subscript(dynamicMember key:String) -> JSON {
         get { getValue(key)}
         set { setValue(newValue, forKey: key)}
