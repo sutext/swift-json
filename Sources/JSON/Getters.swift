@@ -116,7 +116,7 @@ public extension JSON{
 }
 
 // MARK: Type judgment
-extension JSON{
+public extension JSON{
     //strict type
     @inlinable var isNull:Bool{
         if case .null = self { return true }
@@ -147,27 +147,10 @@ extension JSON{
         if case .object = self { return true }
         return false
     }
-    /// Brief descriptions. only print the root element
-    @inlinable var intro:String{
-        switch self {
-        case .null:
-            return "JSON.null"
-        case .bool(let bool):
-            return "JSON.bool(\(bool))"
-        case .array(let array):
-            return "JSON.Array(\(array.count))"
-        case .object(let object):
-            return "JSON.Object(\(object.count))"
-        case .number(let number):
-            return "JSON.number(\(number))"
-        case .string(let string):
-            return "JSON.string(\"\(string)\")"
-        }
-    }
 }
 
 // MARK: - JSON: RawValue
-extension JSON{
+public extension JSON{
     /// Recover the original data structure
     ///
     ///     let json = JSON(["key":"value"])
@@ -177,7 +160,7 @@ extension JSON{
     ///     }
     /// - Note:`nil` is only obtained if `self` is `JSON.null`
     ///
-    @inlinable public var rawValue:Any?{
+    @inlinable var rawValue:Any?{
         switch self {
         case .bool(let value):
             return value
@@ -195,7 +178,7 @@ extension JSON{
     }
     /// The same as `rawValue`,but compact. Strip all null values.
     /// - SeeAlso: `rawValue`
-    @inlinable public var compactValue:Any?{
+    @inlinable var compactValue:Any?{
         switch self {
         case .bool(let value):
             return value
@@ -214,7 +197,7 @@ extension JSON{
     /// Convert to json data
     /// JSONSerialization is more efficient
     /// - Note:Got `nil`  only when `self` is `JSON.null`
-    @inlinable public var rawData:Data?{
+    @inlinable var rawData:Data?{
         guard let value = rawValue else{
             return nil
         }
@@ -222,7 +205,7 @@ extension JSON{
     }
     /// The same as `rawData` but compact.Strip all null values.
     /// - SeeAlso: `rawData`
-    @inlinable public var compactData:Data?{
+    @inlinable var compactData:Data?{
         guard let value = compactValue else{
             return nil
         }
@@ -230,7 +213,7 @@ extension JSON{
     }
     /// Convert to json string use UTF8 encoding.
     /// - Note:Got `nil`  only when `self` is `JSON.null`
-    @inlinable public var rawString: String?{
+    @inlinable var rawString: String?{
         guard let data = rawData else{
             return nil
         }
@@ -241,7 +224,7 @@ extension JSON{
     }
     /// The same as `rawString` but compact.Strip all null values.
     /// - SeeAlso: `compactString`
-    @inlinable public var compactString: String?{
+    @inlinable var compactString: String?{
         guard let data = compactData else{
             return nil
         }

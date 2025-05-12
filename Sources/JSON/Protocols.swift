@@ -51,6 +51,23 @@ extension JSON:ExpressibleByDictionaryLiteral{
     }
 }
 extension JSON:CustomStringConvertible,CustomDebugStringConvertible{
+    /// Brief descriptions. only print the root element
+    @inlinable public var intro:String{
+        switch self {
+        case .null:
+            return "JSON.null"
+        case .bool(let bool):
+            return "JSON.bool(\(bool))"
+        case .array(let array):
+            return "JSON.Array(\(array.count) elements)"
+        case .object(let object):
+            return "JSON.Object(\(object.count) key-pairs)"
+        case .number(let number):
+            return "JSON.number(\(number))"
+        case .string(let string):
+            return "JSON.string(\"\(string)\")"
+        }
+    }
     public var description: String{
         guard let rawValue else{
             return "null"
@@ -135,7 +152,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_),(.bool,_),(.number,_),(.string,_):
             return .none
         default:
-            fatalError("\(self.desc) and Index(\(i)) do not match")
+            fatalError("\(self.intro) and Index(\(i)) do not match")
         }
     }
     public subscript(position: Index) -> (any JSONKey,JSON) {
@@ -147,7 +164,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_),(.bool,_),(.number,_),(.string,_):
             return (0,.null)
         default:
-            fatalError("\(self.desc) and Index(\(position)) do not match")
+            fatalError("\(self.intro) and Index(\(position)) do not match")
         }
     }
     public func distance(from start: Index, to end: Index) -> Int {
@@ -159,7 +176,7 @@ extension JSON:RandomAccessCollection{
         case (.null,_,_),(.bool,_,_),(.number,_,_),(.string,_,_):
             return 0
         default:
-            fatalError("\(self.desc) and StartIndex(\(start)) and EndIndex(\(start)) do not match")
+            fatalError("\(self.intro) and StartIndex(\(start)) and EndIndex(\(start)) do not match")
         }
     }
 }
